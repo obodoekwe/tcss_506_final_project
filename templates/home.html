@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Welcome to Your Book Wishlist</h1>
+<div class="dropdown">
+    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+        Show Books
+    </button>
+    <ul>-->
+        {% for title, book in books.items() %}
+            <li>{{ title }}</li>
+        {% endfor %}
+    </ul>s
+</div>
+<p>This is your personal dashboard where you can manage your books.</p>
+{% endblock %}
+

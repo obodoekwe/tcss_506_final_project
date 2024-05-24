@@ -1,0 +1,12 @@
+BookWishlistApp/
+├── templates/
+│   ├── base.html
+│   ├── login.html
+│   ├── home.html
+│   └── register.html
+├── static/
+│   └── style.css
+├── app.py
+├── forms.py
+├── models.py
+└── requirements.txt
