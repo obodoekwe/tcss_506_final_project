@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-3">
+    <h2>{{ book.title }}</h2>
+    {% if book.image_url %}
+    <img src="{{ book.image_url }}" alt="{{ book.title }}" class="img-fluid">
+    {% endif %}
+    <p><strong>Author:</strong> {{ book.author }}</p>
+    <p><strong>Description:</strong> {{ book.description }}</p>
+</div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container text-center">
+    <h1 class="my-4">Welcome to Your Book Wishlist</h1>
+    <p class="lead">Manage and track your favorite books effortlessly.</p>
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">Login</a>
+        </div>
+        <div class="col-md-6">
+            <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">Register</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

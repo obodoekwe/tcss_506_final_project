@@ -2,16 +2,72 @@
 
 {% block content %}
 <h1>Welcome to Your Book Wishlist</h1>
-<div class="dropdown">
-    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-        Show Books
-    </button>
-    <ul>-->
-        {% for title, book in books.items() %}
-            <li>{{ title }}</li>
-        {% endfor %}
-    </ul>s
-</div>
-<p>This is your personal dashboard where you can manage your books.</p>
-{% endblock %}
+<div class="alert alert-info">You are logged in. Manage your wishlist or <a href="/logout" class="alert-link">logout</a>.</div>
 
+<!-- Container to manage overall spacing -->
+<div class="container mt-3">
+    <!-- Single row to hold all buttons and search -->
+    <div class="row align-items-center">
+        <!-- Show Books Dropdown -->
+        <div class="col-auto">
+            <div class="dropdown">
+                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                    Show Books
+                </button>
+                <ul class="dropdown-menu">
+                    {% for title, book in books.items() %}
+                        <li><a class="dropdown-item" href="{{ url_for('book_details', title=title) }}">{{ title }}</a></li>
+                    {% else %}
+                        <li><a class="dropdown-item" href="#">No books found</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- My Wishlist Button -->
+        <div class="col-auto">
+            <a href="{{ url_for('wishlist') }}" class="btn btn-primary">
+                My Wishlist
+            </a>
+        </div>
+
+        <!-- Search Field and Add/Remove Buttons -->
+        <div class="col">
+            <form class="input-group" action="{{ url_for('add_books') }}" method="POST">
+                <input type="text" name="title" class="form-control" placeholder="Search books to add or remove" aria-label="Search books">
+                <button class="btn btn-success" type="submit" formaction="{{ url_for('add_books') }}">Add Book</button>
+                <button class="btn btn-danger" type="submit" formaction="{{ url_for('remove_books') }}">Remove Book</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap Toasts for notifications -->
+<div aria-live="polite" aria-atomic="true" class="position-relative" style="min-height: 200px;">
+    <div style="position: absolute; top: 0; right: 0;">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000" data-bs-autohide="true">
+            <div class="toast-header">
+                <strong class="me-auto">Notification</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                {{ message }}
+            </div>
+        </div>
+        {% endfor %}
+        {% endwith %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var toastElList = [].slice.call(document.querySelectorAll('.toast'));
+    var toastList = toastElList.map(function (toastEl) {
+        return new bootstrap.Toast(toastEl).show();
+    });
+});
+</script>
+
+{% endblock %}
