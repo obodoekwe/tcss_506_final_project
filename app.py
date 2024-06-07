@@ -1,22 +1,64 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 # from flask_sqlalchemy import SQLAlchemy
-from flask_bcrypt import Bcrypt
+# from flask_bcrypt import Bcrypt
 from book import query_open_library, get_book_by_title
-# from forms import LoginForm, RegistrationForm
-from models import db, User, Book
+from flask_login import login_user, logout_user, login_required
+from forms import LoginForm
+from models import db, User, Book, loginManager
+import sqlite3
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'my_secret_key'
 
-bcrypt = Bcrypt(app)
+
+# database configuration
+DBUSER = 'user'
+DBPASS = 'password'
+DBHOST = 'db'
+DBPORT = '5432'
+DBNAME = 'pglogindb'
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://{user}:{passwd}@{host}:{port}/{db}'.format(
+        user=DBUSER,
+        passwd=DBPASS,
+        host=DBHOST,
+        port=DBPORT,
+        db=DBNAME)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+
+# bcrypt = Bcrypt(app)
 db.init_app(app)
+loginManager.init_app(app)
+
+
+#add user routine
+def add_user(username, email, password):
+    user = User(username=username, email=email)
+    user.set_password(password)
+    user.email = email
+    db.session.add(user)
+    db.session.commit()
+    return user
+
+
+#handler for bad requests
+@loginManager.unauthorized_handler
+def authHandler():
+    form=LoginForm()
+    flash('Please login to access this page')
+    return render_template('login.html', form=form)
 
 
 @app.before_first_request
 def create_tables():
     db.create_all()
+    user = User.query.filter_by(email='natiteme@uw.edu').first()
+    if user is None:
+        add_user('user', 'natiteme@uw.edu', 'password')
+    else:
+        logout_user()
 
 
 @app.route('/')
@@ -27,7 +69,7 @@ def landing():
 @app.route('/home')
 def home():
     if 'user_id' in session:
-        user_id = session['user_id']
+        # user_id = session['user_id']
         books = query_open_library()
         return render_template("home.html", books=books)
     else:
@@ -39,30 +81,39 @@ def login():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
-
-        # Placeholder function to check user credentials
         user = User.query.filter_by(email=email).first()
-        if user and bcrypt.check_password_hash(user.password, password):
-            session['user_id'] = user.id  # Store user's ID in session
-            flash('You were successfully logged in', 'success')
+        if user and user.check_password(password):
+            session['user_id'] = user.id
+            flash('You were successfully logged in.', 'success')
             return redirect(url_for('home'))
         else:
-            flash('Invalid email or password', 'danger')
-    return render_template("login.html")
+            flash('Invalid email or password.', 'danger')
+    return render_template('login.html')
 
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username']
+        username = request.form.get('username')
         email = request.form['email']
-        hashed_password = bcrypt.generate_password_hash(request.form['password']).decode('utf-8')
-        user = User(username=username, email=email, password=hashed_password)
+        password = request.form['password']
+
+        # Check if the username is already taken
+        if User.query.filter_by(email=email).first():
+            flash('Username already exists')
+            return redirect(url_for('register'))
+
+        # Hash the password before storing it
+        user = User(username=username, email=email)
+        user.set_password(password)
+        user.email = email
         db.session.add(user)
         db.session.commit()
-        flash('Your account has been created! You are now able to log in', 'success')
+
+        flash('Registration successful. Please log in.')
         return redirect(url_for('login'))
-    return render_template("register.html")
+
+    return render_template('register.html')
 
 
 @app.route('/book/<title>')
